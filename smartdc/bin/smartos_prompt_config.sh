@@ -34,10 +34,10 @@ declare -a DISK_LIST
 
 sigexit()
 {
-	echo
-	echo "System configuration has not been completed."
-	echo "You must reboot to re-run system configuration."
-	exit 0
+  echo
+  echo "System configuration has not been completed."
+  echo "You must reboot to re-run system configuration."
+  exit 0
 }
 
 #
@@ -48,11 +48,11 @@ sigexit()
 #
 max_fld()
 {
-	if [ $2 -eq 255 ]; then
-		fmax=$1
-	else
-		fmax=$((255 & ~$2))
-	fi
+  if [ $2 -eq 255 ]; then
+    fmax=$1
+  else
+    fmax=$((255 & ~$2))
+  fi
 }
 
 #
@@ -65,226 +65,303 @@ max_fld()
 #
 ip_netmask_to_network()
 {
-	IP=$1
-	NETMASK=$2
+  IP=$1
+  NETMASK=$2
 
-	OLDIFS=$IFS
-	IFS=.
-	set -- $IP
-	net_a=$1
-	net_b=$2
-	net_c=$3
-	net_d=$4
-	addr_d=$net_d
+  OLDIFS=$IFS
+  IFS=.
+  set -- $IP
+  net_a=$1
+  net_b=$2
+  net_c=$3
+  net_d=$4
+  addr_d=$net_d
 
-	set -- $NETMASK
+  set -- $NETMASK
 
-	# Calculate the maximum host address
-	max_fld "$net_a" "$1"
-	max_a=$fmax
-	max_fld "$net_b" "$2"
-	max_b=$fmax
-	max_fld "$net_c" "$3"
-	max_c=$fmax
-	max_fld "$net_d" "$4"
-	max_d=$(expr $fmax - 1)
-	max_host="$max_a.$max_b.$max_c.$max_d"
+  # Calculate the maximum host address
+  max_fld "$net_a" "$1"
+  max_a=$fmax
+  max_fld "$net_b" "$2"
+  max_b=$fmax
+  max_fld "$net_c" "$3"
+  max_c=$fmax
+  max_fld "$net_d" "$4"
+  max_d=$(expr $fmax - 1)
+  max_host="$max_a.$max_b.$max_c.$max_d"
 
-	net_a=$(($net_a & $1))
-	net_b=$(($net_b & $2))
-	net_c=$(($net_c & $3))
-	net_d=$(($net_d & $4))
+  net_a=$(($net_a & $1))
+  net_b=$(($net_b & $2))
+  net_c=$(($net_c & $3))
+  net_d=$(($net_d & $4))
 
-	host_addr=$(($addr_d & ~$4))
-	IFS=$OLDIFS
+  host_addr=$(($addr_d & ~$4))
+  IFS=$OLDIFS
 }
 
 # Tests whether entire string is a number.
 isdigit ()
 {
-	[ $# -eq 1 ] || return 1
+  [ $# -eq 1 ] || return 1
 
-	case $1 in
-  	*[!0-9]*|"") return 1;;
-	*) return 0;;
-	esac
+  case $1 in
+    *[!0-9]*|"") return 1;;
+  *) return 0;;
+  esac
 }
 
 # Tests network numner (num.num.num.num)
 is_net()
 {
-	NET=$1
+  NET=$1
 
-	OLDIFS=$IFS
-	IFS=.
-	set -- $NET
-	a=$1
-	b=$2
-	c=$3
-	d=$4
-	IFS=$OLDIFS
+  OLDIFS=$IFS
+  IFS=.
+  set -- $NET
+  a=$1
+  b=$2
+  c=$3
+  d=$4
+  IFS=$OLDIFS
 
-	isdigit "$a" || return 1
-	isdigit "$b" || return 1
-	isdigit "$c" || return 1
-	isdigit "$d" || return 1
+  isdigit "$a" || return 1
+  isdigit "$b" || return 1
+  isdigit "$c" || return 1
+  isdigit "$d" || return 1
 
-	[ -z $a ] && return 1
-	[ -z $b ] && return 1
-	[ -z $c ] && return 1
-	[ -z $d ] && return 1
+  [ -z $a ] && return 1
+  [ -z $b ] && return 1
+  [ -z $c ] && return 1
+  [ -z $d ] && return 1
 
-	[ $a -lt 0 ] && return 1
-	[ $a -gt 255 ] && return 1
-	[ $b -lt 0 ] && return 1
-	[ $b -gt 255 ] && return 1
-	[ $c -lt 0 ] && return 1
-	[ $c -gt 255 ] && return 1
-	[ $d -lt 0 ] && return 1
-	# Make sure the last field isn't the broadcast addr.
-	[ $d -ge 255 ] && return 1
-	return 0
+  [ $a -lt 0 ] && return 1
+  [ $a -gt 255 ] && return 1
+  [ $b -lt 0 ] && return 1
+  [ $b -gt 255 ] && return 1
+  [ $c -lt 0 ] && return 1
+  [ $c -gt 255 ] && return 1
+  [ $d -lt 0 ] && return 1
+  # Make sure the last field isn't the broadcast addr.
+  [ $d -ge 255 ] && return 1
+  return 0
 }
 
 # Optional input
 promptopt()
 {
-	val=
-	printf "%s [press enter for none]: " "$1"
-	read val
+  val=
+  printf "%s [press enter for none]: " "$1"
+  read val
 }
 
 promptval()
 {
-	val=""
-	def="$2"
-	while [ -z "$val" ]; do
-		if [ -n "$def" ]; then
-			printf "%s [%s]: " "$1" "$def"
-		else
-			printf "%s: " "$1"
-		fi
-		read val
-		[ -z "$val" ] && val="$def"
-		[ -n "$val" ] && break
-		echo "A value must be provided."
-	done
+  val=""
+  def="$2"
+  while [ -z "$val" ]; do
+    if [ -n "$def" ]; then
+      printf "%s [%s]: " "$1" "$def"
+    else
+      printf "%s: " "$1"
+    fi
+    read val
+    [ -z "$val" ] && val="$def"
+    [ -n "$val" ] && break
+    echo "A value must be provided."
+  done
 }
 
 # Input must be a valid network number (see is_net())
 promptnet()
 {
-	val=""
-	def="$2"
-	while [ -z "$val" ]; do
-		if [ -n "$def" ]; then
-			printf "%s [%s]: " "$1" "$def"
-		else
-			printf "%s: " "$1"
-		fi
-		read val
-		[ -z "$val" ] && val="$def"
-    if [[ "$val" != "dhcp" ]]; then
-		  is_net "$val" || val=""
+  val=""
+  def="$2"
+  while [ -z "$val" ]; do
+    if [ -n "$def" ]; then
+      printf "%s [%s]: " "$1" "$def"
+    else
+      printf "%s: " "$1"
     fi
-		[ -n "$val" ] && break
-		echo "A valid network number (n.n.n.n) or 'dhcp' must be provided."
-	done
+    read val
+    [ -z "$val" ] && val="$def"
+    if [[ "$val" != "dhcp" ]]; then
+      is_net "$val" || val=""
+    fi
+    [ -n "$val" ] && break
+    echo "A valid network number (n.n.n.n) or 'dhcp' must be provided."
+  done
 }
 
 printnics()
 {
-	i=1
-	printf "%-6s %-9s %-18s %-7s %-10s\n" "Number" "Link" "MAC Address" \
-	    "State" "Network"
-	while [ $i -le $nic_cnt ]; do
-		printf "%-6d %-9s %-18s %-7s %-10s\n" $i ${nics[$i]} \
-		    ${macs[$i]} ${states[$i]} ${assigned[i]}
-		((i++))
-	done
+  i=1
+  printf "%-6s %-9s %-18s %-7s %-10s\n" "Number" "Link" "MAC Address" \
+      "State" "Network"
+  while [ $i -le $nic_cnt ]; do
+    printf "%-6d %-9s %-18s %-7s %-10s\n" $i ${nics[$i]} \
+        ${macs[$i]} ${states[$i]} ${assigned[i]}
+    ((i++))
+  done
 }
 
 # Must choose a valid NIC on this system
 promptnic()
 {
-	if [[ $nic_cnt -eq 1 ]]; then
-		val="${macs[1]}"
-		return
-	fi
+  if [[ $nic_cnt -eq 1 ]]; then
+    val="${macs[1]}"
+    return
+  fi
 
-	printnics
-	num=0
-	while [ /usr/bin/true ]; do
-		printf "Enter the number of the NIC for the %s interface: " \
-		   "$1"
-		read num
-		if ! [[ "$num" =~ ^[0-9]+$ ]] ; then
-			echo ""
-		elif [ $num -ge 1 -a $num -le $nic_cnt ]; then
-			mac_addr="${macs[$num]}"
-			assigned[$num]=$1
-			break
-		fi
-		# echo "You must choose between 1 and $nic_cnt."
-		updatenicstates
-		printnics
-	done
+  printnics
+  num=0
+  while [ /usr/bin/true ]; do
+    printf "Enter the number of the NIC for the %s interface: " \
+       "$1"
+    read num
+    if ! [[ "$num" =~ ^[0-9]+$ ]] ; then
+      echo ""
+    elif [ $num -ge 1 -a $num -le $nic_cnt ]; then
+      mac_addr="${macs[$num]}"
+      assigned[$num]=$1
+      break
+    fi
+    # echo "You must choose between 1 and $nic_cnt."
+    updatenicstates
+    printnics
+  done
 
-	val=$mac_addr
+  val=$mac_addr
 }
 
 promptpw()
 {
-	while [ /usr/bin/true ]; do
-		val=""
-		while [ -z "$val" ]; do
-			printf "%s: " "$1"
-			stty -echo
-			read val
-			stty echo
-			echo
-			if [ -n "$val" ]; then
-				if [ "$2" == "chklen" -a ${#val} -lt 6 ]; then
-					echo "The password must be at least" \
-					    "6 characters long."
-					val=""
-				else
-	 				break
-				fi
-			else 
-				echo "A value must be provided."
-			fi
-		done
+  while [ /usr/bin/true ]; do
+    val=""
+    while [ -z "$val" ]; do
+      printf "%s: " "$1"
+      stty -echo
+      read val
+      stty echo
+      echo
+      if [ -n "$val" ]; then
+        if [ "$2" == "chklen" -a ${#val} -lt 6 ]; then
+          echo "The password must be at least" \
+              "6 characters long."
+          val=""
+        else
+          break
+        fi
+      else
+        echo "A value must be provided."
+      fi
+    done
 
-		cval=""
-		while [ -z "$cval" ]; do
-			printf "%s: " "Confirm password"
-			stty -echo
-			read cval
-			stty echo
-			echo
-			[ -n "$cval" ] && break
-			echo "A value must be provided."
-		done
+    cval=""
+    while [ -z "$cval" ]; do
+      printf "%s: " "Confirm password"
+      stty -echo
+      read cval
+      stty echo
+      echo
+      [ -n "$cval" ] && break
+      echo "A value must be provided."
+    done
 
-		[ "$val" == "$cval" ] && break
+    [ "$val" == "$cval" ] && break
 
-		echo "The entries do not match, please re-enter."
-	done
+    echo "The entries do not match, please re-enter."
+  done
+}
+
+promptfourk()
+{
+  disks=$(disklist -n)
+  echo "Before we set up ZFS, are any of the disks in this system"
+  echo "'Advanced Format' or '512e' disks which have a real sector"
+  echo "size of 4k bytes but advertise 512 byte sectors?"
+  echo ""
+  echo "If so, please indicate the disks from the list below"
+  echo "to be forced to 4k sectors. Otherwise, press return to"
+  echo "skip this step and continue."
+  echo ""
+  echo "Once one disk has been overridden here, ZFS will use the 4k"
+  echo "sector size for all of the disks in the pool, so you do not"
+  echo "need to specify every disk."
+  echo ""
+  echo "(if you are using consumer-class SATA disks or intend to"
+  echo " at any point, you should indicate a disk here)"
+  echo ""
+  override=""
+  while [[ /usr/bin/true ]]; do
+    printf "\nAvailable disks:\n"
+    for disk in $disks; do
+      info=$(iostat -Exn | awk "/^${disk}/ { getline; print; }")
+      sizeinfo=$(iostat -Exn | awk "/^${disk}/ { getline; getline; print; }")
+      vendor=$(echo $info | sed -E 's/Vendor: (.{8}).*$/\1/')
+      product=$(echo $info | sed -E 's/.*Product: ([^ ]*) .*$/\1/')
+      echo $override | grep $disk 1>&2 > /dev/null
+      if [[ $? != 0 ]]; then
+        printf " %25s %-10s %-20s\n" "$disk" "$vendor" "$product"
+      else
+        printf "*%25s %-10s %-20s\n" "$disk" "$vendor" "$product"
+      fi
+      printf " %25s %-30s\n\n" "" "$sizeinfo"
+    done
+    printf "Type a disk device name [finish]: "
+    read val
+    if [[ $val == "" ]]; then
+      break
+    fi
+    override="$val $override"
+  done
+
+  if [[ -z "$override" ]]; then
+    echo "Continuing..."
+  else
+    printf "\n\n# Generated by smartos_prompt_config.sh\n" >> /kernel/drv/sd.conf
+    printf "sd-config-list=\n" >> /kernel/drv/sd.conf
+    first=1
+    for disk in $disks; do
+      info=$(iostat -Exn | awk "/^${disk}/ { getline; print; }")
+      sizeinfo=$(iostat -Exn | awk "/^${disk}/ { getline; getline; print; }")
+      vendor=$(echo $info | sed -E 's/Vendor: ([^ ]*) .*$/\1/')
+      product=$(echo $info | sed -E 's/.*Product: ([^ ]*) .*$/\1/')
+      echo $override | grep $disk 1>&2 > /dev/null
+      if [[ $? -eq 0 ]]; then
+        if [[ $first -ne 1 ]]; then
+          printf ",\n" >> /kernel/drv/sd.conf
+        fi
+        printf "\t\"%-8s%s\", \"physical-block-size:4096\"" "$vendor" "$product" >> /kernel/drv/sd.conf
+        first=0
+      fi
+    done
+    printf ";\n" >> /kernel/drv/sd.conf
+    update_drv -vf sd
+  fi
 }
 
 promptpool()
 {
   disks=$(disklist -n)
+  vdevtypes="disk mirror raidz raidz1 raidz2 raidz3 spare log cache"
   while [[ /usr/bin/true ]]; do
-    echo "Please select disks for the storage pool, space separated"
+    echo "Please compose the ZFS vdevs for the zone/VM storage pool."
+    echo "eg. 'mirror c0t0d0 c0t1d0 mirror c0t2d0 c0t3d0'"
     echo ""
-    printf "Valid choices are ${disks}"
-    echo ""
+    printf "Available disks:\n"
+    for disk in $disks; do
+      info=$(iostat -Exn | awk "/^${disk}/ { getline; print; }")
+      sizeinfo=$(iostat -Exn | awk "/^${disk}/ { getline; getline; print; }")
+      vendor=$(echo $info | sed -E 's/Vendor: (.{8}).*$/\1/')
+      product=$(echo $info | sed -E 's/.*Product: ([^ ]*) .*$/\1/')
+      printf "%25s %-10s %-20s\n" "$disk" "$vendor" "$product"
+      printf "%25s %-30s\n\n" "" "$sizeinfo"
+    done
+    printf "Available vdev types: ${vdevtypes}\n\n"
     bad=""
     read val
     if [[ $val == "" ]]; then
-      echo "At least one disk must be specified"
+      echo "At least one vdev must be specified"
       echo ""
       continue
     fi
@@ -292,17 +369,20 @@ promptpool()
       if [[ -z $disk ]]; then continue; fi;
       echo $disks | grep $disk 1>&2 > /dev/null
       if [[ $? != 0 ]]; then
-        bad="$disk $bad"
+        echo $vdevtypes | grep $disk 1>&2 > /dev/null
+        if [[ $? != 0 ]]; then
+          bad="$disk $bad"
+        fi
       fi
     done
     if [[ $bad != "" ]]; then
-      printf "The disks %s are not valid choices" $bad
+      printf "Parameters %s are not valid choices" $bad
     else
       DISK_LIST="$val"
       break
     fi
   done
-  
+
 }
 
 create_dump()
@@ -328,50 +408,50 @@ create_dump()
 setup_datasets()
 {
   datasets=$(zfs list -H -o name | xargs)
-  
+
   if ! echo $datasets | grep dump > /dev/null; then
-    printf "%-56s" "Making dump zvol... " 
+    printf "%-56s" "Making dump zvol... "
     create_dump
-    printf "%4s\n" "done" 
+    printf "%4s\n" "done"
   fi
 
   if ! echo $datasets | grep ${CONFDS} > /dev/null; then
-    printf "%-56s" "Initializing config dataset for zones... " 
+    printf "%-56s" "Initializing config dataset for zones... "
     zfs create ${CONFDS} || fatal "failed to create the config dataset"
     chmod 755 /${CONFDS}
     cp -p /etc/zones/* /${CONFDS}
     zfs set mountpoint=legacy ${CONFDS}
-    printf "%4s\n" "done" 
+    printf "%4s\n" "done"
   fi
 
   if ! echo $datasets | grep ${USBKEYDS} > /dev/null; then
     if [[ -n $(/bin/bootparams | grep "^smartos=true") ]]; then
-        printf "%-56s" "Creating config dataset... " 
+        printf "%-56s" "Creating config dataset... "
         zfs create -o mountpoint=legacy ${USBKEYDS} || \
           fatal "failed to create the config dataset"
         mkdir /usbkey
         mount -F zfs ${USBKEYDS} /usbkey
-        printf "%4s\n" "done" 
+        printf "%4s\n" "done"
     fi
   fi
 
   if ! echo $datasets | grep ${COREDS} > /dev/null; then
-    printf "%-56s" "Creating global cores dataset... " 
+    printf "%-56s" "Creating global cores dataset... "
     zfs create -o quota=10g -o mountpoint=/${SYS_ZPOOL}/global/cores \
         -o compression=gzip ${COREDS} || \
         fatal "failed to create the cores dataset"
-    printf "%4s\n" "done" 
+    printf "%4s\n" "done"
   fi
 
   if ! echo $datasets | grep ${OPTDS} > /dev/null; then
-    printf "%-56s" "Creating opt dataset... " 
+    printf "%-56s" "Creating opt dataset... "
     zfs create -o mountpoint=legacy ${OPTDS} || \
       fatal "failed to create the opt dataset"
-    printf "%4s\n" "done" 
+    printf "%4s\n" "done"
   fi
 
   if ! echo $datasets | grep ${VARDS} > /dev/null; then
-    printf "%-56s" "Initializing var dataset... " 
+    printf "%-56s" "Initializing var dataset... "
     zfs create ${VARDS} || \
       fatal "failed to create the var dataset"
     chmod 755 /${VARDS}
@@ -383,7 +463,7 @@ setup_datasets()
     zfs set mountpoint=legacy ${VARDS}
 
     if ! echo $datasets | grep ${SWAPVOL} > /dev/null; then
-          printf "%-56s" "Creating swap zvol... " 
+          printf "%-56s" "Creating swap zvol... "
           #
           # We cannot allow the swap size to be less than the size of DRAM, lest$
           # we run into the availrmem double accounting issue for locked$
@@ -398,7 +478,7 @@ setup_datasets()
           zfs create -V ${size}mb ${SWAPVOL}
           swap -a /dev/zvol/dsk/${SWAPVOL}
     fi
-    printf "%4s\n" "done" 
+    printf "%4s\n" "done"
   fi
 }
 
@@ -413,47 +493,16 @@ create_zpool()
         return 0
     fi
 
-    disk_count=$(echo "${disks}" | wc -w | tr -d ' ')
-    printf "%-56s" "Creating pool $pool... " 
+    printf "%-56s" "Creating pool $pool... "
 
-    # If no pool profile was provided, use a default based on the number of
-    # devices in that pool.
-    if [[ -z ${profile} ]]; then
-        case ${disk_count} in
-        0)
-             fatal "no disks found, can't create zpool";;
-        1)
-             profile="";;
-        2)
-             profile=mirror;;
-        *)
-             profile=raidz;;
-        esac
-    fi
-
-    zpool_args=""
-
-    # When creating a mirrored pool, create a mirrored pair of devices out of
-    # every two disks.
-    if [[ ${profile} == "mirror" ]]; then
-        ii=0
-        for disk in ${disks}; do
-            if [[ $(( $ii % 2 )) -eq 0 ]]; then
-                  zpool_args="${zpool_args} ${profile}"
-            fi
-            zpool_args="${zpool_args} ${disk}"
-            ii=$(($ii + 1))
-        done
-    else
-        zpool_args="${profile} ${disks}"
-    fi
+    zpool_args="$disks"
 
     zpool create -f ${pool} ${zpool_args} || \
         fatal "failed to create pool ${pool}"
     zfs set atime=off ${pool} || \
         fatal "failed to set atime=off for pool ${pool}"
 
-    printf "%4s\n" "done" 
+    printf "%4s\n" "done"
 }
 create_zpools()
 {
@@ -472,7 +521,7 @@ create_zpools()
   export VARDS=${SYS_ZPOOL}/var
   export USBKEYDS=${SYS_ZPOOL}/usbkey
   export SWAPVOL=${SYS_ZPOOL}/swap
-  
+
   setup_datasets
   #
   # Since there may be more than one storage pool on the system, put a
@@ -482,23 +531,23 @@ create_zpools()
 }
 updatenicstates()
 {
-	states=(1)
-	#states[0]=1
-	while IFS=: read -r link state ; do
-		states=( ${states[@]-} $(echo "$state") )
-	done < <(dladm show-phys -po link,state 2>/dev/null)
+  states=(1)
+  #states[0]=1
+  while IFS=: read -r link state ; do
+    states=( ${states[@]-} $(echo "$state") )
+  done < <(dladm show-phys -po link,state 2>/dev/null)
 }
 
-printheader() 
+printheader()
 {
   local newline=
   local cols=`tput cols`
   local subheader=$1
-  
+
   if [ $cols -gt 80 ] ;then
     newline='\n'
   fi
-  
+
   clear
   for i in {1..80} ; do printf "-" ; done && printf "$newline"
   printf " %-40s\n" "SmartOS Setup"
@@ -522,8 +571,8 @@ while IFS=: read -r link addr ; do
 done < <(dladm show-phys -pmo link,address 2>/dev/null)
 
 if [[ $nic_cnt -lt 1 ]]; then
-	echo "ERROR: cannot configure the system, no NICs were found."
-	exit 0
+  echo "ERROR: cannot configure the system, no NICs were found."
+  exit 0
 fi
 
 ifconfig -a plumb
@@ -545,20 +594,20 @@ Would you like to continue with configuration? [Y/n]"
 printf "$message"
 read continue;
 if [[ $continue == 'n' ]]; then
-	exit 0
+  exit 0
 fi
 #
 # Main loop to prompt for user input
 #
 while [ /usr/bin/true ]; do
 
-	printheader "Networking" 
-	
-	promptnic "'admin'"
-	admin_nic="$val"
+  printheader "Networking"
 
-	promptnet "IP address (or 'dhcp' )" "$admin_ip"
-	admin_ip="$val"
+  promptnic "'admin'"
+  admin_nic="$val"
+
+  promptnet "IP address (or 'dhcp' )" "$admin_ip"
+  admin_ip="$val"
   if [[ $admin_ip != 'dhcp' ]]; then
     promptnet "netmask" "$admin_netmask"
     admin_netmask="$val"
@@ -568,7 +617,7 @@ while [ /usr/bin/true ]; do
 
     printheader "Networking - Continued"
     message=""
-    
+
     printf "$message"
 
     message="
@@ -588,36 +637,39 @@ while [ /usr/bin/true ]; do
     domainname="$val"
     promptval "Default DNS search domain" "$dns_domain"
     dns_domain="$val"
-  fi	
-	printheader "Storage"
-	promptpool
- 
-	printheader "Account Information"
-	
-	promptpw "Enter root password" "nolen"
-	root_shadow="$val"
+  fi
+  printheader "Storage"
+  promptfourk
 
-	printheader "Verify Configuration"
-	message=""
-  
-	printf "$message"
+  printheader "Storage"
+  promptpool
 
-	echo "Verify that the following values are correct:"
-	echo
-	echo "MAC address: $admin_nic"
-	echo "IP address: $admin_ip"
+  printheader "Account Information"
+
+  promptpw "Enter root password" "nolen"
+  root_shadow="$val"
+
+  printheader "Verify Configuration"
+  message=""
+
+  printf "$message"
+
+  echo "Verify that the following values are correct:"
+  echo
+  echo "MAC address: $admin_nic"
+  echo "IP address: $admin_ip"
   if [[ $admin_ip != 'dhcp' ]]; then
     echo "Netmask: $admin_netmask"
     echo "Gateway router IP address: $headnode_default_gateway"
     echo "DNS servers: $dns_resolver1,$dns_resolver2"
     echo "Default DNS search domain: $dns_domain"
     echo "NTP server: $ntp_hosts"
-	  echo "Domain name: $domainname"
+    echo "Domain name: $domainname"
     echo
   fi
-	promptval "Is this correct?" "y"
-	[ "$val" == "y" ] && break
-	clear
+  promptval "Is this correct?" "y"
+  [ "$val" == "y" ] && break
+  clear
 done
 
 #
@@ -667,7 +719,7 @@ promptval "Would you like to edit the final configuration file?" "n"
 clear
 
 echo
-echo "Your data pool will be created with the following disks:"
+echo "Your zones pool will be created with the following configuration:"
 echo $DISK_LIST
 echo "*********************************************"
 echo "* This will erase *ALL DATA* on these disks *"
