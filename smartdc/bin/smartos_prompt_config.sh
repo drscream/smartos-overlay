@@ -273,23 +273,37 @@ promptpw()
   done
 }
 
-promptfourk()
+fourkhelp()
 {
-  disks=$(disklist -n)
   echo "Before we set up ZFS, are any of the disks in this system"
   echo "'Advanced Format' or '512e' disks which have a real sector"
   echo "size of 4k bytes but advertise 512 byte sectors?"
   echo ""
-  echo "If so, please indicate the disks from the list below"
+  echo "If so, please indicate the disks from the list on the next page"
   echo "to be forced to 4k sectors. Otherwise, press return to"
   echo "skip this step and continue."
   echo ""
   echo "Once one disk has been overridden here, ZFS will use the 4k"
-  echo "sector size for all of the disks in the pool, so you do not"
+  echo "sector size for all of the disks in that vdev, so you do not"
   echo "need to specify every disk."
   echo ""
-  echo "(if you are using consumer-class SATA disks or intend to"
-  echo " at any point, you should indicate a disk here)"
+  echo "(if you are using consumer-class SATA disks or intend to at any"
+  echo " point, you should indicate at least one disk in this step)"
+  echo ""
+  read
+}
+
+promptfourk()
+{
+  # force inquiry on all the disks so we get their true names
+  fmtnum=$(printf "\n" | /usr/sbin/format | wc -l)
+  fmtnum=$(( ($fmtnum - 5) / 2 ))
+  for x in $(seq 0 $fmtnum); do
+    printf "$x\ninquiry\n" | format 2>/dev/null >/dev/null
+  done
+
+  disks=$(disklist -n)
+  echo "Select disks to force to 4k sectors:"
   echo ""
   override=""
   while [[ /usr/bin/true ]]; do
@@ -301,13 +315,12 @@ promptfourk()
       product=$(echo $info | sed -E 's/.*Product: ([^ ]*) .*$/\1/')
       echo $override | grep $disk 1>&2 > /dev/null
       if [[ $? != 0 ]]; then
-        printf " %25s %-10s %-20s\n" "$disk" "$vendor" "$product"
+        printf " %25s %-10s %-20s %-20s\n" "$disk" "$vendor" "$product" "$sizeinfo"
       else
-        printf "*%25s %-10s %-20s\n" "$disk" "$vendor" "$product"
+        printf "*%25s %-10s %-20s %-20s\n" "$disk" "$vendor" "$product" "$sizeinfo"
       fi
-      printf " %25s %-30s\n\n" "" "$sizeinfo"
     done
-    printf "Type a disk device name [finish]: "
+    printf "\nType a disk device name [finish]: "
     read val
     if [[ $val == "" ]]; then
       break
@@ -354,10 +367,9 @@ promptpool()
       sizeinfo=$(iostat -Exn | awk "/^${disk}/ { getline; getline; print; }")
       vendor=$(echo $info | sed -E 's/Vendor: (.{8}).*$/\1/')
       product=$(echo $info | sed -E 's/.*Product: ([^ ]*) .*$/\1/')
-      printf "%25s %-10s %-20s\n" "$disk" "$vendor" "$product"
-      printf "%25s %-30s\n\n" "" "$sizeinfo"
+      printf "%25s %-10s %-20s %-20s\n" "$disk" "$vendor" "$product" "$sizeinfo"
     done
-    printf "Available vdev types: ${vdevtypes}\n\n"
+    printf "\nAvailable vdev types: ${vdevtypes}\n\n"
     bad=""
     read val
     if [[ $val == "" ]]; then
@@ -638,6 +650,8 @@ while [ /usr/bin/true ]; do
     promptval "Default DNS search domain" "$dns_domain"
     dns_domain="$val"
   fi
+  printheader "Storage"
+  fourkhelp
   printheader "Storage"
   promptfourk
 
